@@ -61,3 +61,43 @@ Admin only (JWT + role=admin): `GET /api/admin/stats|bookings|users|messages` ·
 - Change the admin password (`admin123`) right after the first deploy. A change-password screen is not built yet.
 - Replace the resort name, phone, WhatsApp number and address in `shared/data.js`. The current values are placeholders.
 - The chatbot is rule-based. To use an LLM, call it from a new server route and keep `assistant.js` as the fallback.
+
+## Deploying to https://unizova.com/resort
+
+One Node process serves everything: the website at `/resort`, the admin panel at `/resort/admin` and the API at `/resort/api`. The base paths for the frontend builds are in `client/.env.production` and `admin/.env.production`.
+
+```bash
+git clone https://github.com/balamurugesan03/resort.git && cd resort
+npm run install:all
+npm run build                       # builds client/dist and admin/dist with the /resort base
+cp server/.env.example server/.env  # then edit it, see below
+npm install -g pm2 && pm2 start "npm start" --name resort && pm2 save
+```
+
+`server/.env` in production:
+
+```
+NODE_ENV=production
+PORT=5000
+BASE_PATH=/resort
+MONGO_URI=mongodb+srv://...          # MongoDB Atlas or a local mongod
+JWT_SECRET=...                       # 32+ random chars: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+CLIENT_URL=https://unizova.com
+ADMIN_EMAIL=you@unizova.com          # first admin account, created only if no admin exists
+ADMIN_PASSWORD=...                   # 10+ chars
+```
+
+In production the server refuses to start without a strong `JWT_SECRET`, does not create the demo logins, and the frontends hide the demo buttons and never fall back to the in-browser demo backend.
+
+Nginx (inside the `server { ... }` block for unizova.com):
+
+```nginx
+location /resort {
+    proxy_pass http://127.0.0.1:5000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+To update: `git pull && npm run install:all && npm run build && pm2 restart resort`.

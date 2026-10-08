@@ -19,13 +19,21 @@ export async function connectDB(uri) {
 }
 
 // Seeds catalogue collections. Without `force`, only empty collections are filled.
-export async function seed({ force = false } = {}) {
+// Demo logins are skipped in production; the first admin comes from ADMIN_EMAIL / ADMIN_PASSWORD instead.
+export async function seed({ force = false, demoUsers = process.env.NODE_ENV !== 'production' } = {}) {
   for (const [Model, docs] of collections) {
     if (force) await Model.deleteMany({});
     else if (await Model.estimatedDocumentCount()) continue;
     await Model.insertMany(docs);
     console.log(`  seeded ${Model.modelName} (${docs.length})`);
   }
+  const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+  if (ADMIN_EMAIL && ADMIN_PASSWORD && !(await User.exists({ role: 'admin' }))) {
+    if (ADMIN_PASSWORD.length < 10) throw new Error('ADMIN_PASSWORD must be at least 10 characters');
+    await User.create({ name: 'Resort Admin', email: ADMIN_EMAIL, role: 'admin', password: await bcrypt.hash(ADMIN_PASSWORD, 10) });
+    console.log(`  created admin ${ADMIN_EMAIL}`);
+  }
+  if (!demoUsers) return;
   for (const [user, password] of DEMO_USERS) {
     if (await User.exists({ email: user.email })) continue;
     await User.create({ ...user, password: await bcrypt.hash(password, 10) });

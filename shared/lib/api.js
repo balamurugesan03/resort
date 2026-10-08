@@ -3,6 +3,8 @@ import { mockRequest } from './mock.js';
 const BASE = import.meta.env.VITE_API_URL || '/api';
 // Each app sets its own key (website vs admin) so their logins never overwrite each other.
 const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || 'ss-token';
+// Demo mode = in-browser mock backend + demo logins. Production builds turn it off with VITE_DEMO=false.
+export const DEMO_ENABLED = import.meta.env.VITE_DEMO !== 'false';
 
 export const tokenStore = {
   get: () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } },
@@ -45,6 +47,7 @@ export async function api(path, { method = 'GET', body } = {}) {
       return result;
     } catch (err) {
       if (err instanceof ApiError || demoMode === false) throw err;
+      if (!DEMO_ENABLED) throw new ApiError('Cannot reach the server. Please try again in a moment.', 0);
       demoMode = true;
       listeners.forEach((fn) => fn(true));
     }

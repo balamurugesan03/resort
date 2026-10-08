@@ -4,6 +4,7 @@ import { Loader2, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Tabs } from './ui.jsx';
+import { DEMO_ENABLED } from '@shared/lib/api.js';
 
 export const DEMO = { email: 'demo@sagarashores.in', password: 'demo123' };
 
@@ -56,7 +57,7 @@ export default function AuthForm({ onDone, compact }) {
           {busy && <Loader2 size={16} className="animate-spin" />}
           {mode === 'login' ? 'Log in' : 'Create account'}
         </button>
-        {mode === 'login' && (
+        {mode === 'login' && DEMO_ENABLED && (
           <button type="button" onClick={() => submit(null, DEMO)} disabled={busy} className="btn-outline w-full">
             <Sparkles size={16} className="text-amber-500" /> Continue with demo account
           </button>

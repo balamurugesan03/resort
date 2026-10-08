@@ -7,7 +7,7 @@ import {
 import toast, { Toaster } from 'react-hot-toast';
 import { Logo } from './components/ui.jsx';
 import { useAuth } from './context/AuthContext.jsx';
-import { isDemoMode, onDemoMode } from '@shared/lib/api.js';
+import { DEMO_ENABLED, isDemoMode, onDemoMode } from '@shared/lib/api.js';
 import { cn } from '@shared/lib/format.js';
 import Dashboard from './pages/Dashboard.jsx';
 import Bookings from './pages/Bookings.jsx';
@@ -64,7 +64,7 @@ function Login() {
           </div>
           <button className="btn-dark w-full" disabled={busy}>{busy && <Loader2 size={16} className="animate-spin" />} Log in</button>
         </form>
-        <button onClick={() => submit(DEMO_ADMIN)} disabled={busy} className="btn-primary mt-3 w-full"><Sparkles size={16} /> Continue as demo admin</button>
+        {DEMO_ENABLED && <button onClick={() => submit(DEMO_ADMIN)} disabled={busy} className="btn-primary mt-3 w-full"><Sparkles size={16} /> Continue as demo admin</button>}
       </motion.div>
     </section>
   );
